@@ -1,0 +1,9 @@
+CompileFlags:
+  Add:
+    - -xc++
+    - -std=c++17
+    - -IE:/Projects/Eugenix/Clion/libraries/behaviortree-cpp/include
+    - -IE:/Projects/Eugenix/Clion/libraries/behaviortree-cpp/3rdparty
+    - -IE:/Projects/Eugenix/Clion/libraries/behaviortree-cpp/3rdparty/minitrace
+    - -IE:/Projects/Eugenix/Clion/libraries/behaviortree-cpp/3rdparty/tinyxml2
+    - -IE:/Projects/Eugenix/Clion/libraries/behaviortree-cpp/3rdparty/minicoro

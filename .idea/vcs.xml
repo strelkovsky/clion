@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/libraries/ImGuizmo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/libraries/SDL" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/libraries/bullet" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/libraries/cereal" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/libraries/glm" vcs="Git" />
+  </component>
+</project>
