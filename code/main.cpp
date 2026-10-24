@@ -1,5 +1,4 @@
 ﻿#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 
 #include <stb_image.h>
 
@@ -13,13 +12,14 @@
 
 #include <print>
 
+#include "backends/glfw/window_factory.hpp"
+
 int main()
 {
-    glfwInit();
+    const auto window_factory = std::make_unique<backends::glfw::WindowFactory>();
 
-    GLFWwindow* window_handle = glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
-
-    glfwMakeContextCurrent(window_handle);
+    const auto window = window_factory->create_window();
+    window->create("Hello World", 640, 480);
 
     gladLoadGL();
 
@@ -32,15 +32,13 @@ int main()
 
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
-    while (glfwWindowShouldClose(window_handle) == GLFW_FALSE)
+    while (!window->is_closing)
     {
         glClear(GL_COLOR_BUFFER_BIT);
-        glfwSwapBuffers(window_handle);
-        glfwPollEvents();
+        window->update();
     }
 
-    glfwDestroyWindow(window_handle);
-    glfwTerminate();
+    window->destroy();
 
     return 0;
 }
