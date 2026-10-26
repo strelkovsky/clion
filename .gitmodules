@@ -1,3 +1,6 @@
 [submodule "modules/platforms"]
 	path = modules/platforms
 	url = https://github.com/strelkovsky/clion_platform_modules.git
+[submodule "modules/graphics"]
+	path = modules/graphics
+	url = https://github.com/strelkovsky/clion_graphics_module.git
