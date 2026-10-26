@@ -18,16 +18,14 @@ elseif (APPLE)
     set(ICON glfw.icns)
 endif()
 
-set(GLAD_GL "${GLFW_SOURCE_DIR}/deps/glad/gl.h")
-set(GLAD_GLES2 "${GLFW_SOURCE_DIR}/deps/glad/gles2.h")
 set(GETOPT "${GLFW_SOURCE_DIR}/deps/getopt.h"
            "${GLFW_SOURCE_DIR}/deps/getopt.c")
 set(TINYCTHREAD "${GLFW_SOURCE_DIR}/deps/tinycthread.h"
                 "${GLFW_SOURCE_DIR}/deps/tinycthread.c")
 
-add_executable(boing WIN32 MACOSX_BUNDLE boing.c ${ICON} ${GLAD_GL})
-add_executable(gears WIN32 MACOSX_BUNDLE gears.c ${ICON} ${GLAD_GL})
-add_executable(heightmap WIN32 MACOSX_BUNDLE heightmap.c ${ICON} ${GLAD_GL})
+add_executable(boing WIN32 MACOSX_BUNDLE boing.c ${ICON})
+add_executable(gears WIN32 MACOSX_BUNDLE gears.c ${ICON})
+add_executable(heightmap WIN32 MACOSX_BUNDLE heightmap.c ${ICON})
 add_executable(offscreen offscreen.c ${ICON} ${GLAD_GL})
 add_executable(particles WIN32 MACOSX_BUNDLE particles.c ${ICON} ${TINYCTHREAD} ${GETOPT} ${GLAD_GL})
 add_executable(sharing WIN32 MACOSX_BUNDLE sharing.c ${ICON} ${GLAD_GL})
