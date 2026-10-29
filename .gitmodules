@@ -4,3 +4,6 @@
 [submodule "modules/graphics"]
 	path = modules/graphics
 	url = https://github.com/strelkovsky/clion_graphics_module.git
+[submodule "modules/utilities"]
+	path = modules/utilities
+	url = https://github.com/strelkovsky/clion_utilities_module.git
