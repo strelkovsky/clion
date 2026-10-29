@@ -124,12 +124,6 @@ corresponding preprocessor flag to selectively disable formats.
 #ifndef ASSIMP_BUILD_NO_BVH_IMPORTER
 #include "AssetLib/BVH/BVHLoader.h"
 #endif
-#ifndef ASSIMP_BUILD_NO_IRRMESH_IMPORTER
-#include "AssetLib/Irr/IRRMeshLoader.h"
-#endif
-#ifndef ASSIMP_BUILD_NO_IRR_IMPORTER
-#include "AssetLib/Irr/IRRLoader.h"
-#endif
 #ifndef ASSIMP_BUILD_NO_Q3D_IMPORTER
 #include "AssetLib/Q3D/Q3DLoader.h"
 #endif
@@ -150,9 +144,6 @@ corresponding preprocessor flag to selectively disable formats.
 #endif
 #ifndef ASSIMP_BUILD_NO_LWS_IMPORTER
 #include "AssetLib/LWS/LWSLoader.h"
-#endif
-#ifndef ASSIMP_BUILD_NO_OGRE_IMPORTER
-#include "AssetLib/Ogre/OgreImporter.h"
 #endif
 #ifndef ASSIMP_BUILD_NO_OPENGEX_IMPORTER
 #include "AssetLib/OpenGEX/OpenGEXImporter.h"
@@ -307,12 +298,6 @@ void GetImporterInstanceList(std::vector<BaseImporter *> &out) {
 #if (!defined ASSIMP_BUILD_NO_BVH_IMPORTER)
     out.push_back(new BVHLoader());
 #endif
-#if (!defined ASSIMP_BUILD_NO_IRRMESH_IMPORTER)
-    out.push_back(new IRRMeshImporter());
-#endif
-#if (!defined ASSIMP_BUILD_NO_IRR_IMPORTER)
-    out.push_back(new IRRImporter());
-#endif
 #if (!defined ASSIMP_BUILD_NO_Q3D_IMPORTER)
     out.push_back(new Q3DImporter());
 #endif
@@ -333,9 +318,6 @@ void GetImporterInstanceList(std::vector<BaseImporter *> &out) {
 #endif
 #if (!defined ASSIMP_BUILD_NO_LWS_IMPORTER)
     out.push_back(new LWSImporter());
-#endif
-#if (!defined ASSIMP_BUILD_NO_OGRE_IMPORTER)
-    out.push_back(new Ogre::OgreImporter());
 #endif
 #if (!defined ASSIMP_BUILD_NO_OPENGEX_IMPORTER)
     out.push_back(new OpenGEX::OpenGEXImporter());

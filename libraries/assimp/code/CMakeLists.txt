@@ -381,24 +381,10 @@ ADD_ASSIMP_IMPORTER( HMP
   AssetLib/HMP/HalfLifeFileData.h
 )
 
-ADD_ASSIMP_IMPORTER( IRRMESH
-  AssetLib/Irr/IRRMeshLoader.cpp
-  AssetLib/Irr/IRRMeshLoader.h
-  AssetLib/Irr/IRRShared.cpp
-  AssetLib/Irr/IRRShared.h
-)
-
 ADD_ASSIMP_IMPORTER( IQM
   AssetLib/IQM/IQMImporter.cpp
   AssetLib/IQM/iqm.h
   AssetLib/IQM/IQMImporter.h
-)
-
-ADD_ASSIMP_IMPORTER( IRR
-  AssetLib/Irr/IRRLoader.cpp
-  AssetLib/Irr/IRRLoader.h
-  AssetLib/Irr/IRRShared.cpp
-  AssetLib/Irr/IRRShared.h
 )
 
 ADD_ASSIMP_IMPORTER( LWO
@@ -516,19 +502,6 @@ IF(((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT MINGW AND NOT HAIKU) AND CMAKE
       COMPILE_FLAGS "-Wno-maybe-uninitialized"
   )
 endif()
-
-ADD_ASSIMP_IMPORTER( OGRE
-  AssetLib/Ogre/OgreImporter.h
-  AssetLib/Ogre/OgreStructs.h
-  AssetLib/Ogre/OgreParsingUtils.h
-  AssetLib/Ogre/OgreBinarySerializer.h
-  AssetLib/Ogre/OgreXmlSerializer.h
-  AssetLib/Ogre/OgreImporter.cpp
-  AssetLib/Ogre/OgreStructs.cpp
-  AssetLib/Ogre/OgreBinarySerializer.cpp
-  AssetLib/Ogre/OgreXmlSerializer.cpp
-  AssetLib/Ogre/OgreMaterial.cpp
-)
 
 ADD_ASSIMP_IMPORTER( OPENGEX
   AssetLib/OpenGEX/OpenGEXImporter.cpp
@@ -868,7 +841,6 @@ ADD_ASSIMP_IMPORTER( X3D
   AssetLib/X3D/X3DGeoHelper.h
   AssetLib/X3D/X3DXmlHelper.cpp
   AssetLib/X3D/X3DXmlHelper.h
-  AssetLib/VRML/VrmlConverter.cpp
 )
 SET(glTFCommon_src
   AssetLib/glTFCommon/glTFCommon.h
