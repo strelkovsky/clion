@@ -7,6 +7,8 @@
     <mapping directory="$PROJECT_DIR$/libraries/bullet" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/libraries/cereal" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/libraries/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/graphics" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/modules/platforms" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/utilities" vcs="Git" />
   </component>
 </project>
