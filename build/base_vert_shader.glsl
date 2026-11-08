@@ -2,13 +2,25 @@
 
 uniform mat4 MVP;
 
-layout (location = 0) in vec2 in_position;
+layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec3 in_color;
 
 layout (location = 0) out vec3 out_color;
+
+layout (binding = 0, std140) uniform camera_ubo
+{
+    mat4 view;
+    mat4 projection;
+};
+
+layout (binding = 1, std140) uniform transform_ubo
+{
+    mat4 model;
+    // TODO mat4 normal - матрица нормалей для освещения
+};
+
 void main()
 {
-//    gl_Position = MVP * vec4(vPos, 0.0, 1.0);
-    gl_Position = vec4(in_position, 0.0, 1.0);
+    gl_Position = projection * view * model * vec4(in_position, 1.0);
     out_color = in_color;
 };

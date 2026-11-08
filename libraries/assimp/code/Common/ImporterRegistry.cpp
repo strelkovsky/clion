@@ -187,9 +187,6 @@ corresponding preprocessor flag to selectively disable formats.
 #ifndef ASSIMP_BUILD_NO_3MF_IMPORTER
 #include "AssetLib/3MF/D3MFImporter.h"
 #endif
-#ifndef ASSIMP_BUILD_NO_X3D_IMPORTER
-#include "AssetLib/X3D/X3DImporter.hpp"
-#endif
 #ifndef ASSIMP_BUILD_NO_MMD_IMPORTER
 #include "AssetLib/MMD/MMDImporter.h"
 #endif
@@ -360,9 +357,6 @@ void GetImporterInstanceList(std::vector<BaseImporter *> &out) {
 #endif
 #if (!defined ASSIMP_BUILD_NO_3MF_IMPORTER)
     out.push_back(new D3MFImporter());
-#endif
-#ifndef ASSIMP_BUILD_NO_X3D_IMPORTER
-    out.push_back(new X3DImporter());
 #endif
 #ifndef ASSIMP_BUILD_NO_MMD_IMPORTER
     out.push_back(new MMDImporter());
