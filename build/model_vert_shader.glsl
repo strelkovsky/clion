@@ -23,4 +23,4 @@ void main()
 {
     gl_Position = projection * view * model * vec4(in_position, 1.0);
     out_texcoord = in_texcoord;
-};
+}

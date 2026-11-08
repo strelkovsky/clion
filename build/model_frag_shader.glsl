@@ -8,6 +8,5 @@ layout (binding = 0) uniform sampler2D u_albedo_texture;
 
 void main()
 {
-    vec4 color = texture(u_albedo_texture, in_texcoord);
-    out_color = color;
+    out_color = texture(u_albedo_texture, in_texcoord);
 }

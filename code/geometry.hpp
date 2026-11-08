@@ -6,12 +6,19 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-struct vertex
+struct model_vertex
 {
     glm::vec3 position;
     glm::vec2 texcoord;
 };
 
+struct sprite_vertex
+{
+    glm::vec2 position;
+    glm::vec2 texcoord;
+};
+
+template <typename vertex>
 struct geometry
 {
     std::vector<vertex> vertices;
@@ -19,12 +26,12 @@ struct geometry
 };
 
 // не загружает несколько мешей, просто берет первый.
-inline auto load_geometry(std::string_view filename) -> geometry
+inline auto load_geometry(std::string_view filename) -> geometry<model_vertex>
 {
     Assimp::Importer importer;
     if (const auto scene = importer.ReadFile(filename.data(), 0); scene != nullptr)
     {
-        geometry geometry;
+        geometry<model_vertex> geometry;
 
         const auto mesh = scene->mMeshes[0];
 
@@ -33,7 +40,7 @@ inline auto load_geometry(std::string_view filename) -> geometry
             const auto& position = mesh->mVertices[i];
             const auto& texcoord = mesh->mTextureCoords[0][i];
 
-            geometry.vertices.emplace_back(vertex {glm::vec3{ position.x, position.y, position.z }, { texcoord.x, texcoord.y } });
+            geometry.vertices.emplace_back(model_vertex {glm::vec3{ position.x, position.y, position.z }, { texcoord.x, texcoord.y } });
         }
 
         for (auto i = 0; i < mesh->mNumFaces; i++)
