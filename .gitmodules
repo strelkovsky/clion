@@ -7,3 +7,6 @@
 [submodule "modules/utilities"]
 	path = modules/utilities
 	url = https://github.com/strelkovsky/clion_utilities_module.git
+[submodule "modules/mathematics"]
+	path = modules/mathematics
+	url = https://github.com/strelkovsky/clion_mathematics_module.git

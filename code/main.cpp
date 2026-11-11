@@ -7,6 +7,7 @@
 #include <glfw/glfw3.h>
 
 #include <stb_image.h>
+#include <stb_rect_pack.h>
 
 #include "backends/glfw/window_factory.hpp"
 
@@ -23,20 +24,6 @@
 #include "graphics/opengl/texture.hpp"
 
 #include "geometry.hpp"
-
-static geometry<sprite_vertex> sprite_geometry
-{
-    {
-        sprite_vertex { { -100.0f, -100.0f }, { 0.0f, 1.0f } },
-        sprite_vertex { {  100.0f, -100.0f }, { 1.0f, 1.0f  } },
-        sprite_vertex { {  100.0f,  100.0f }, { 1.0f, 0.0f, } },
-        sprite_vertex { { -100.0f,  100.0f }, { 0.0f, 0.0f } },
-    },
-    {
-        0, 2, 1,
-        0, 3, 2
-    }
-};
 
 auto main() -> int32_t
 {
@@ -81,6 +68,14 @@ auto main() -> int32_t
     sprite_fragment_stage.create(GL_FRAGMENT_SHADER);
     sprite_fragment_stage.source(core::File::read("sprite_frag_shader.glsl"));
 
+    graphics::opengl::ShaderStage basic_vertex_stage;
+    basic_vertex_stage.create(GL_VERTEX_SHADER);
+    basic_vertex_stage.source(core::File::read("basic_vert_shader.glsl"));
+
+    graphics::opengl::ShaderStage basic_fragment_stage;
+    basic_fragment_stage.create(GL_FRAGMENT_SHADER);
+    basic_fragment_stage.source(core::File::read("basic_frag_shader.glsl"));
+
     graphics::opengl::ShaderProgram model_program_shader;
     model_program_shader.create();
     model_program_shader.attach(model_vertex_stage);
@@ -93,11 +88,20 @@ auto main() -> int32_t
     sprite_program_shader.attach(sprite_fragment_stage);
     sprite_program_shader.link();
 
+    graphics::opengl::ShaderProgram basic_program_shader;
+    basic_program_shader.create();
+    basic_program_shader.attach(basic_vertex_stage);
+    basic_program_shader.attach(basic_fragment_stage);
+    basic_program_shader.link();
+
     model_vertex_stage.destroy();
     model_fragment_stage.destroy();
 
     sprite_vertex_stage.destroy();
     sprite_fragment_stage.destroy();
+
+    basic_vertex_stage.destroy();
+    basic_fragment_stage.destroy();
 
     const auto [geometry_vertices, geometry_elements] = load_geometry("cube.obj");
 
@@ -118,13 +122,15 @@ auto main() -> int32_t
     cube_geometry_vao.attach_attribute({0, offsetof(model_vertex, position), 3, GL_FLOAT, 0});
     cube_geometry_vao.attach_attribute({1, offsetof(model_vertex, texcoord), 2, GL_FLOAT,  0});
 
+    const auto [sprite_vertices, sprite_elements] = create_sprite({-100.0f, -100.0f, 100.0f, 100.0f});
+
     graphics::opengl::Buffer sprite_geometry_vbo;
     sprite_geometry_vbo.create();
-    sprite_geometry_vbo.data(sizeof(sprite_vertex) * sprite_geometry.vertices.size(), sprite_geometry.vertices.data());
+    sprite_geometry_vbo.data(sizeof(sprite_vertex) * sprite_vertices.size(), sprite_vertices.data());
 
     graphics::opengl::Buffer sprite_geometry_ebo;
     sprite_geometry_ebo.create();
-    sprite_geometry_ebo.data(sizeof(uint32_t) * sprite_geometry.elements.size(), sprite_geometry.elements.data());
+    sprite_geometry_ebo.data(sizeof(uint32_t) * sprite_elements.size(), sprite_elements.data());
 
     graphics::opengl::VertexArray sprite_geometry_vao;
     sprite_geometry_vao.create();
@@ -150,10 +156,10 @@ auto main() -> int32_t
     glm::mat4 model_matrix {1.0f};
     glm::mat4 sprite_matrix {1.0f};
 
-    graphics::opengl::Buffer transforms_ubo;
-    transforms_ubo.create();
-    transforms_ubo.bind(GL_UNIFORM_BUFFER, 1);
-    transforms_ubo.data(sizeof(model_matrix), &model_matrix);
+    graphics::opengl::Buffer transform_ubo;
+    transform_ubo.create();
+    transform_ubo.bind(GL_UNIFORM_BUFFER, 1);
+    transform_ubo.data(sizeof(model_matrix), &model_matrix);
 
     // идея семплера - вам не нужно указывать для каждой текстуры какой фильтр использовать.
     graphics::opengl::TextureSampler texture_sampler;
@@ -176,6 +182,89 @@ auto main() -> int32_t
 
     brick_texture.bind(0);
 
+    // rectangles packing - begin
+
+    stbrp_context context;
+
+    int32_t atlas_width = 2048;
+    int32_t atlas_height = 2048;
+
+    constexpr auto atlas_nodes_count = 512;
+    stbrp_node atlas_nodes[atlas_nodes_count];
+
+    stbrp_init_target(&context, atlas_width, atlas_height, atlas_nodes, atlas_nodes_count);
+
+    constexpr auto rectangles_count = 5;
+    stbrp_rect rectangles[rectangles_count];
+
+    rectangles[0].id = 0;
+    rectangles[0].w = 256;
+    rectangles[0].h = 256;
+
+    rectangles[1].id = 1;
+    rectangles[1].w = 300;
+    rectangles[1].h = 64;
+
+    rectangles[2].id = 2;
+    rectangles[2].w = 64;
+    rectangles[2].h = 400;
+
+    rectangles[3].id = 3;
+    rectangles[3].w = 32;
+    rectangles[3].h = 32;
+
+    rectangles[4].id = 4;
+    rectangles[4].w = 32;
+    rectangles[4].h = 32;
+
+    auto all_packed = stbrp_pack_rects(&context, rectangles, rectangles_count);
+
+    printf("Packing status: %s\n\n", all_packed ? "All packed successfully!" : "Some rectangles did not fit.");
+
+    geometry<editor_vertex, uint32_t> rectangles_geometry;
+
+    for (auto i = 0; i < rectangles_count; ++i)
+    {
+        if (rectangles[i].was_packed)
+        {
+            printf("Rect ID %d: Positioned at (%d, %d) [Size: %dx%d]\n", rectangles[i].id, rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h);
+
+            auto half_width = rectangles[i].w * 0.5f;
+            auto half_height = rectangles[i].h * 0.5f;
+
+            rectangles_geometry.append(create_rectangle({ 0, 0,  static_cast<float>(rectangles[i].w), static_cast<float>(rectangles[i].h) }, { 1.0f, 0.0f, 0.0 }));
+        }
+        else
+        {
+            printf("Rect ID %d: FAILED to pack [Size: %dx%d]\n", rectangles[i].id, rectangles[i].w, rectangles[i].h);
+        }
+    }
+
+    // rectangles packing - end
+
+    // framebuffer - begin
+
+    // framebuffer - end
+
+    // rectangles
+
+    graphics::opengl::Buffer rectangles_vbo;
+    rectangles_vbo.create();
+    rectangles_vbo.data(sizeof(editor_vertex) * rectangles_geometry.vertices.size(), rectangles_geometry.vertices.data());
+
+    graphics::opengl::Buffer rectangles_ebo;
+    rectangles_ebo.create();
+    rectangles_ebo.data(sizeof(editor_vertex) * rectangles_geometry.elements.size(), rectangles_geometry.elements.data());
+
+    graphics::opengl::VertexArray rectangles_vao;
+    rectangles_vao.create();
+
+    rectangles_vao.attach_vertices(rectangles_vbo, sizeof(editor_vertex));
+    rectangles_vao.attach_elements(rectangles_ebo);
+
+    rectangles_vao.attach_attribute({ 0, offsetof(editor_vertex, position), 3, GL_FLOAT, 0 });
+    rectangles_vao.attach_attribute({ 1, offsetof(editor_vertex, color), 3, GL_FLOAT, 0 });
+
     window_events->callbacks.on_resize = [&](uint32_t width, uint32_t height)
     {
         window_width = width;
@@ -185,7 +274,7 @@ auto main() -> int32_t
     graphics::opengl::Commands::clear(0.5f, 0.5f, 0.5f, 1.0f);
 
     graphics::opengl::Pipeline::enable(GL_MULTISAMPLE);
-    graphics::opengl::Pipeline::enable(GL_DEPTH_TEST);
+    //graphics::opengl::Pipeline::enable(GL_DEPTH_TEST);
 
     while (window_is_running)
     {
@@ -201,6 +290,8 @@ auto main() -> int32_t
 
         // models
 
+        graphics::opengl::Pipeline::enable(GL_DEPTH_TEST);
+
         model_camera_matrices[1] = glm::perspective(glm::radians(45.0f), static_cast<float>(window_width) / static_cast<float>(window_height), 0.3f, 100.0f);
         camera_ubo.subdata(0, sizeof(model_camera_matrices), model_camera_matrices);
 
@@ -208,11 +299,13 @@ auto main() -> int32_t
 
         cube_geometry_vao.bind();
 
-        transforms_ubo.subdata(0, sizeof(model_matrix), &model_matrix);
+        transform_ubo.subdata(0, sizeof(model_matrix), &model_matrix);
 
-        graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, geometry_elements.size());
+        //graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, geometry_elements.size());
 
         // sprites
+
+        graphics::opengl::Pipeline::disable(GL_DEPTH_TEST);
 
         sprite_camera_matrices[1] = glm::ortho(0.0f, static_cast<float>(window_width), static_cast<float>(window_height), 0.0f, 0.0f, 1.0f);
         camera_ubo.subdata(0, sizeof(sprite_camera_matrices), sprite_camera_matrices);
@@ -221,20 +314,44 @@ auto main() -> int32_t
 
         sprite_geometry_vao.bind();
 
-        transforms_ubo.subdata(0, sizeof(sprite_matrix), &sprite_matrix);
+        transform_ubo.subdata(0, sizeof(sprite_matrix), &sprite_matrix);
 
-        graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, sprite_geometry.elements.size());
+        //graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, sprite_elements.size());
 
+        // rectangles
+
+        basic_program_shader.bind();
+
+        rectangles_vao.bind();
+
+        for (auto i = 0; i < rectangles_count; ++i)
+        {
+            auto& rectangle = rectangles[i];
+
+            auto parent_matrix = glm::translate(glm::mat4(1.0f), { 30, 30, 0 });
+
+            auto rectangle_matrix = glm::translate(parent_matrix, { rectangle.x, rectangle.y, 0.0f });
+
+            transform_ubo.subdata(0, sizeof(glm::mat4), &rectangle_matrix);
+
+            graphics::opengl::Commands::draw_elements(GL_LINES, i * 8, 8);
+        }
         window_manager.update();
     }
 
     brick_texture.destroy();
     texture_sampler.destroy();
+
+    cube_geometry_vao.destroy();
+    sprite_geometry_vao.destroy();
+
     cube_geometry_vbo.destroy();
     cube_geometry_ebo.destroy();
-    cube_geometry_vao.destroy();
+    sprite_geometry_vbo.destroy();
+    sprite_geometry_ebo.destroy();
 
     model_program_shader.destroy();
+    sprite_program_shader.destroy();
 
     window->destroy();
 
