@@ -6,24 +6,28 @@
 
 #include <glfw/glfw3.h>
 
-#include <stb_image.h>
+#include <stb_image_write.h>
 #include <stb_rect_pack.h>
 
 #include "backends/glfw/window_factory.hpp"
 
 #include "core/window_manager.hpp"
 #include "core/file.hpp"
+#include "core/rgba.hpp"
 
 #include "graphics/opengl/buffer.hpp"
-#include "graphics/opengl/vertex_array.hpp"
 #include "graphics/opengl/commands.hpp"
+#include "graphics/opengl/framebuffer.hpp"
 #include "graphics/opengl/pipeline.hpp"
+#include "graphics/opengl/renderbuffer.hpp"
 #include "graphics/opengl/shader_stage.hpp"
 #include "graphics/opengl/shader_program.hpp"
 #include "graphics/opengl/texture_sampler.hpp"
 #include "graphics/opengl/texture.hpp"
+#include "graphics/opengl/vertex_array.hpp"
 
 #include "geometry.hpp"
+#include "resources.hpp"
 
 auto main() -> int32_t
 {
@@ -122,7 +126,7 @@ auto main() -> int32_t
     cube_geometry_vao.attach_attribute({0, offsetof(model_vertex, position), 3, GL_FLOAT, 0});
     cube_geometry_vao.attach_attribute({1, offsetof(model_vertex, texcoord), 2, GL_FLOAT,  0});
 
-    const auto [sprite_vertices, sprite_elements] = create_sprite({-100.0f, -100.0f, 100.0f, 100.0f});
+    const auto [sprite_vertices, sprite_elements] = create_sprite({0, 0, 256.0f, 256.0f});
 
     graphics::opengl::Buffer sprite_geometry_vbo;
     sprite_geometry_vbo.create();
@@ -168,17 +172,14 @@ auto main() -> int32_t
     texture_sampler.parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     texture_sampler.bind(0);
 
-    int32_t image_width;
-    int32_t image_height;
-    int32_t image_channels;
-    const auto image_data = stbi_load("pavement_albedo.png", &image_width, &image_height, &image_channels, 0);
+    texture_data brick_image = load_texture("textures/pavement_albedo.png");
 
     graphics::opengl::Texture brick_texture;
     brick_texture.type = GL_TEXTURE_2D;
     brick_texture.create();
 
-    brick_texture.storage(image_width, image_height, GL_RGB8, 1);
-    brick_texture.subdata(image_width, image_height, GL_RGB, 0, image_data);
+    brick_texture.storage(brick_image.width, brick_image.height, GL_RGB8, 1);
+    brick_texture.subdata(brick_image.width, brick_image.height, GL_RGB, 0, brick_image.pixels);
 
     brick_texture.bind(0);
 
@@ -186,8 +187,8 @@ auto main() -> int32_t
 
     stbrp_context context;
 
-    int32_t atlas_width = 2048;
-    int32_t atlas_height = 2048;
+    auto atlas_width = 1024;
+    auto atlas_height = 1024;
 
     constexpr auto atlas_nodes_count = 512;
     stbrp_node atlas_nodes[atlas_nodes_count];
@@ -229,9 +230,6 @@ auto main() -> int32_t
         {
             printf("Rect ID %d: Positioned at (%d, %d) [Size: %dx%d]\n", rectangles[i].id, rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h);
 
-            auto half_width = rectangles[i].w * 0.5f;
-            auto half_height = rectangles[i].h * 0.5f;
-
             rectangles_geometry.append(create_rectangle({ 0, 0,  static_cast<float>(rectangles[i].w), static_cast<float>(rectangles[i].h) }, { 1.0f, 0.0f, 0.0 }));
         }
         else
@@ -243,6 +241,35 @@ auto main() -> int32_t
     // rectangles packing - end
 
     // framebuffer - begin
+
+    // у этого фреймбуффера будет handel = 0, что будет эквивалентно bind(0)
+    graphics::opengl::framebuffer default_fb;
+
+    graphics::opengl::framebuffer framebuffer;
+    framebuffer.create();
+    framebuffer.bind(); // TODO в DSA вроде не нужно
+
+    graphics::opengl::Texture framebuffer_texture;
+    framebuffer_texture.type = GL_TEXTURE_2D;
+    framebuffer_texture.create();
+    framebuffer_texture.storage(atlas_width, atlas_height, GL_RGB8, 1);
+
+    //graphics::opengl::Renderbuffer renderbuffer;
+    //renderbuffer.create();
+    //renderbuffer.storage(atlas_width, atlas_height, GL_DEPTH_COMPONENT24);
+
+    //glNamedFramebufferTexture(framebuffer, framebuffer_texture.handle, framebuffer_texture.handle, 0);
+    // сюда отрисуется только ColorBit
+    framebuffer.attach(framebuffer_texture,GL_COLOR_ATTACHMENT0, 0);
+    // а сюда только DepthBit
+    //framebuffer.attach(renderbuffer,GL_DEPTH_ATTACHMENT);
+
+    // для работы буфера кадров нужно что-то к нему прикрепить,
+    // он должен куда-то выводить изображение (какой-то контейнер, учакток памяти, чаще всего - текстуры).
+    // а еще есть т.н. буфер рендеринга. Разница между ним и текстурой в том, что текстуру можно увидеть,
+    // прикрепить к другому объекту, или сделать с ней что угодно. А буфер рендеринга - это то, чего вы не
+    // видите, это просто часть буфера кадров. Допустим, буфер глубины может быть чем-то вроде буфера рендеринга.
+
 
     // framebuffer - end
 
@@ -271,6 +298,8 @@ auto main() -> int32_t
         window_height = height;
     };
 
+    core::rgba framebuffer_color { 0.2f, 0.4f, 0.6f, 1.0f };
+
     graphics::opengl::Commands::clear(0.5f, 0.5f, 0.5f, 1.0f);
 
     graphics::opengl::Pipeline::enable(GL_MULTISAMPLE);
@@ -281,44 +310,27 @@ auto main() -> int32_t
         // update
 
         model_matrix = glm::rotate(glm::mat4(1.0f), static_cast<float>(glfwGetTime()), glm::vec3{ 0.0f, 1.0f, 0.0f } );
-        sprite_matrix = glm::translate(glm::mat4(1.0f), { 110.0f, 110.0f, 0.0f } );
+        sprite_matrix = glm::translate(glm::mat4(1.0f), { 10.0f, 10.0f, 0.0f } );
+
+        // clearing
+
+        framebuffer.clear(&framebuffer_color.r, 0);
+        //framebuffer.clear(1.0f);
+
+        graphics::opengl::Commands::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // draw
 
-        graphics::opengl::Commands::viewport(0, 0, window_width, window_height);
-        graphics::opengl::Commands::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        framebuffer.bind();
 
-        // models
-
-        graphics::opengl::Pipeline::enable(GL_DEPTH_TEST);
-
-        model_camera_matrices[1] = glm::perspective(glm::radians(45.0f), static_cast<float>(window_width) / static_cast<float>(window_height), 0.3f, 100.0f);
-        camera_ubo.subdata(0, sizeof(model_camera_matrices), model_camera_matrices);
-
-        model_program_shader.bind();
-
-        cube_geometry_vao.bind();
-
-        transform_ubo.subdata(0, sizeof(model_matrix), &model_matrix);
-
-        //graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, geometry_elements.size());
-
-        // sprites
-
-        graphics::opengl::Pipeline::disable(GL_DEPTH_TEST);
-
-        sprite_camera_matrices[1] = glm::ortho(0.0f, static_cast<float>(window_width), static_cast<float>(window_height), 0.0f, 0.0f, 1.0f);
-        camera_ubo.subdata(0, sizeof(sprite_camera_matrices), sprite_camera_matrices);
-
-        sprite_program_shader.bind();
-
-        sprite_geometry_vao.bind();
-
-        transform_ubo.subdata(0, sizeof(sprite_matrix), &sprite_matrix);
-
-        //graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, sprite_elements.size());
+        graphics::opengl::Commands::viewport(0, 0, atlas_width, atlas_height);
+        // тут вызов не нужен, тк мы здесь рендерим в забинженный фреймбуффер, в котором уже установлены цвет и дептх.
+        //graphics::opengl::Commands::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // rectangles
+
+        sprite_camera_matrices[1] = glm::ortho(0.0f, static_cast<float>(atlas_width), static_cast<float>(atlas_height), 0.0f, 0.0f, 1.0f);
+        camera_ubo.subdata(0, sizeof(sprite_camera_matrices), sprite_camera_matrices);
 
         basic_program_shader.bind();
 
@@ -328,7 +340,7 @@ auto main() -> int32_t
         {
             auto& rectangle = rectangles[i];
 
-            auto parent_matrix = glm::translate(glm::mat4(1.0f), { 30, 30, 0 });
+            auto parent_matrix = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, 0.0f });
 
             auto rectangle_matrix = glm::translate(parent_matrix, { rectangle.x, rectangle.y, 0.0f });
 
@@ -336,6 +348,67 @@ auto main() -> int32_t
 
             graphics::opengl::Commands::draw_elements(GL_LINES, i * 8, 8);
         }
+
+        if (glfwGetKey(std::any_cast<GLFWwindow*>(window->handle()), GLFW_KEY_SPACE) == GLFW_PRESS)
+        {
+            auto channels = 3;
+            auto buffer_size = atlas_width * atlas_height * channels;
+            auto pixels = new unsigned char[buffer_size];
+
+            glReadnPixels(0, 0, atlas_width, atlas_height, GL_RGB, GL_UNSIGNED_BYTE, buffer_size, pixels);
+
+            stbi_write_png("sprite_atlas.png",
+               atlas_width, atlas_height, channels,
+               pixels + atlas_width * channels * (atlas_height - 1),
+               -atlas_width * channels);
+
+            delete[] pixels;
+        }
+
+        // main drawing
+
+        graphics::opengl::Commands::viewport(0, 0, window_width, window_height);
+
+        default_fb.bind();
+
+        // 3D drawing
+
+        graphics::opengl::Pipeline::enable(GL_DEPTH_TEST);
+
+        // models
+
+        model_camera_matrices[1] = glm::perspective(glm::radians(45.0f), static_cast<float>(window_width) / static_cast<float>(window_height), 0.3f, 100.0f);
+        camera_ubo.subdata(0, sizeof(model_camera_matrices), model_camera_matrices);
+
+        model_program_shader.bind();
+
+        brick_texture.bind(0);
+
+        cube_geometry_vao.bind();
+
+        transform_ubo.subdata(0, sizeof(model_matrix), &model_matrix);
+
+        graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, geometry_elements.size());
+
+        // 2D drawing
+
+        graphics::opengl::Pipeline::disable(GL_DEPTH_TEST);
+
+        // sprites
+
+        sprite_camera_matrices[1] = glm::ortho(0.0f, static_cast<float>(window_width), static_cast<float>(window_height), 0.0f, 0.0f, 1.0f);
+        camera_ubo.subdata(0, sizeof(sprite_camera_matrices), sprite_camera_matrices);
+
+        sprite_program_shader.bind();
+
+        framebuffer_texture.bind(0);
+
+        sprite_geometry_vao.bind();
+
+        transform_ubo.subdata(0, sizeof(sprite_matrix), &sprite_matrix);
+
+        graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, sprite_elements.size());
+
         window_manager.update();
     }
 
