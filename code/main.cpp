@@ -273,6 +273,13 @@ auto main() -> int32_t
 
     // framebuffer - end
 
+    // pixel buffer object
+
+    graphics::opengl::Buffer framebuffer_pbo;
+    framebuffer_pbo.create();
+    framebuffer_pbo.data(atlas_width * atlas_height * 3, nullptr); // TODO use here the storage with GL_MAP_READ_BIT
+    framebuffer_pbo.bind(GL_PIXEL_PACK_BUFFER);
+
     // rectangles
 
     graphics::opengl::Buffer rectangles_vbo;
@@ -340,6 +347,7 @@ auto main() -> int32_t
         {
             auto& rectangle = rectangles[i];
 
+            // TODO remove it if needed later on
             auto parent_matrix = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, 0.0f });
 
             auto rectangle_matrix = glm::translate(parent_matrix, { rectangle.x, rectangle.y, 0.0f });
@@ -353,16 +361,19 @@ auto main() -> int32_t
         {
             auto channels = 3;
             auto buffer_size = atlas_width * atlas_height * channels;
-            auto pixels = new unsigned char[buffer_size];
 
-            glReadnPixels(0, 0, atlas_width, atlas_height, GL_RGB, GL_UNSIGNED_BYTE, buffer_size, pixels);
+            // если мы передаем в последний параметр nullptr, до gpu поймет, что мы помещаем пиксели в pbo
+            glReadnPixels(0, 0, atlas_width, atlas_height, GL_RGB, GL_UNSIGNED_BYTE, buffer_size, nullptr);
 
-            stbi_write_png("sprite_atlas.png",
-               atlas_width, atlas_height, channels,
-               pixels + atlas_width * channels * (atlas_height - 1),
-               -atlas_width * channels);
+            if (auto* pixels = static_cast<uint8_t*>(glMapNamedBufferRange(framebuffer_pbo.handle, 0, buffer_size, GL_MAP_READ_BIT)))
+            {
+                stbi_write_png("sprite_atlas.png",
+                           atlas_width, atlas_height, channels,
+                           pixels + atlas_width * channels * (atlas_height - 1),
+                           -atlas_width * channels);
 
-            delete[] pixels;
+                glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+            }
         }
 
         // main drawing
