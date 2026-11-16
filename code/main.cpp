@@ -214,11 +214,19 @@ auto main() -> int32_t
 
     geometry<sprite_vertex, uint32_t> rectangles_geometry;
 
+    std::ofstream outout_file;
+    outout_file.open("rectangles.txt", std::ios::trunc); // TODO check what whis ios::trunc does
+    // TODO have the extension as sprites
+
     for (auto i = 0; i < images_data.size(); ++i)
     {
         if (rectangles[i].was_packed)
         {
             printf("Rect : Positioned at (%d, %d) [Size: %dx%d]\n", rectangles[i].x, rectangles[i].y, rectangles[i].w, rectangles[i].h);
+
+            // TODO move this sprite atlas write into a separate function/class
+            // TODO find a better/best way to write this in a file
+            outout_file << rectangles[i].x << " " << rectangles[i].y << " " << rectangles[i].w << " " << rectangles[i].h << std::endl;
 
             rectangles_geometry.append(create_sprite({ 0, 0,  static_cast<float>(rectangles[i].w), static_cast<float>(rectangles[i].h) }, false));
         }

@@ -11,5 +11,19 @@
     <mapping directory="$PROJECT_DIR$/modules/mathematics" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/modules/platforms" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/modules/utilities" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/OpenGL4-Tutorials" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/antons_opengl_tutorials" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/gltut" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/learnopengl" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/ogldev" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/ogldev/Common/3rdparty/meshoptimizer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl-tutorials" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl-tutorials-victor-gordan" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl4-tutorials-mbsoftworks" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl4-tutorials-mbsoftworks/dependencies/assimp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl4-tutorials-mbsoftworks/dependencies/freetype2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl4-tutorials-mbsoftworks/dependencies/glfw" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl4-tutorials-mbsoftworks/dependencies/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tutorials/opengl/opengl4-tutorials-mbsoftworks/dependencies/stb" vcs="Git" />
   </component>
 </project>

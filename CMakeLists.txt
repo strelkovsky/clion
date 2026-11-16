@@ -2,6 +2,7 @@
 
 project(eugenix)
 
+add_subdirectory(tutorials)
 add_subdirectory(libraries)
 add_subdirectory(modules)
 add_subdirectory(code)
