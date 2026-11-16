@@ -46,10 +46,7 @@ directly (unless you are adding new loaders), instead use the
 corresponding preprocessor flag to selectively disable formats.
 */
 
-#include <assimp/anim.h>
 #include <assimp/BaseImporter.h>
-#include <vector>
-#include <cstdlib>
 
 // ------------------------------------------------------------------------------------------------
 // Importers
@@ -139,15 +136,11 @@ corresponding preprocessor flag to selectively disable formats.
 #ifndef ASSIMP_BUILD_NO_CSM_IMPORTER
 #include "AssetLib/CSM/CSMLoader.h"
 #endif
-#ifndef ASSIMP_BUILD_NO_3D_IMPORTER
-#include "AssetLib/Unreal/UnrealLoader.h"
-#endif
+
 #ifndef ASSIMP_BUILD_NO_LWS_IMPORTER
 #include "AssetLib/LWS/LWSLoader.h"
 #endif
-#ifndef ASSIMP_BUILD_NO_OPENGEX_IMPORTER
-#include "AssetLib/OpenGEX/OpenGEXImporter.h"
-#endif
+
 #ifndef ASSIMP_BUILD_NO_MS3D_IMPORTER
 #include "AssetLib/MS3D/MS3DLoader.h"
 #endif
@@ -310,14 +303,8 @@ void GetImporterInstanceList(std::vector<BaseImporter *> &out) {
 #if (!defined ASSIMP_BUILD_NO_CSM_IMPORTER)
     out.push_back(new CSMImporter());
 #endif
-#if (!defined ASSIMP_BUILD_NO_3D_IMPORTER)
-    out.push_back(new UnrealImporter());
-#endif
 #if (!defined ASSIMP_BUILD_NO_LWS_IMPORTER)
     out.push_back(new LWSImporter());
-#endif
-#if (!defined ASSIMP_BUILD_NO_OPENGEX_IMPORTER)
-    out.push_back(new OpenGEX::OpenGEXImporter());
 #endif
 #if (!defined ASSIMP_BUILD_NO_MS3D_IMPORTER)
     out.push_back(new MS3DImporter());

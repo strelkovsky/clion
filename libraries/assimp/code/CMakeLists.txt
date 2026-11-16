@@ -503,12 +503,6 @@ IF(((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT MINGW AND NOT HAIKU) AND CMAKE
   )
 endif()
 
-ADD_ASSIMP_IMPORTER( OPENGEX
-  AssetLib/OpenGEX/OpenGEXImporter.cpp
-  AssetLib/OpenGEX/OpenGEXImporter.h
-  AssetLib/OpenGEX/OpenGEXStructs.h
-)
-
 ADD_ASSIMP_IMPORTER( PLY
   AssetLib/Ply/PlyLoader.cpp
   AssetLib/Ply/PlyLoader.h
@@ -613,10 +607,6 @@ if (NOT ASSIMP_NO_EXPORT)
   ADD_ASSIMP_EXPORTER( OBJ
     AssetLib/Obj/ObjExporter.h
     AssetLib/Obj/ObjExporter.cpp)
-
-  ADD_ASSIMP_EXPORTER( OPENGEX
-    AssetLib/OpenGEX/OpenGEXExporter.cpp
-    AssetLib/OpenGEX/OpenGEXExporter.h)
 
   ADD_ASSIMP_EXPORTER( PLY
     AssetLib/Ply/PlyExporter.cpp
@@ -792,11 +782,6 @@ ADD_ASSIMP_IMPORTER( STL
 ADD_ASSIMP_IMPORTER( TERRAGEN
   AssetLib/Terragen/TerragenLoader.cpp
   AssetLib/Terragen/TerragenLoader.h
-)
-
-ADD_ASSIMP_IMPORTER( 3D
-  AssetLib/Unreal/UnrealLoader.cpp
-  AssetLib/Unreal/UnrealLoader.h
 )
 
 ADD_ASSIMP_IMPORTER( USD
