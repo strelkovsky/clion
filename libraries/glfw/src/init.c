@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <assert.h>
-
 
 // NOTE: The global variables below comprise all mutable global data in GLFW
 //       Any other mutable global variable is a bug
@@ -93,8 +91,6 @@ static void* defaultReallocate(void* block, size_t size, void* user)
 //
 static void terminate(void)
 {
-    int i;
-
     memset(&_glfw.callbacks, 0, sizeof(_glfw.callbacks));
 
     while (_glfw.windowListHead)
@@ -103,7 +99,7 @@ static void terminate(void)
     while (_glfw.cursorListHead)
         glfwDestroyCursor((GLFWcursor*) _glfw.cursorListHead);
 
-    for (i = 0;  i < _glfw.monitorCount;  i++)
+    for (int i = 0;  i < _glfw.monitorCount;  i++)
     {
         _GLFWmonitor* monitor = _glfw.monitors[i];
         if (monitor->originalRamp.size)
