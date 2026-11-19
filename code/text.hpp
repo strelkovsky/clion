@@ -1,8 +1,8 @@
 ﻿#pragma once
 
+#include <map>
 #include <string_view>
 
-#include <ft2build.h>
 #include <freetype/freetype.h>
 
 #include "core/vec2.hpp"
@@ -24,17 +24,21 @@ struct text_character
 
 static std::map<GLchar, text_character> font_characters;
 
-static auto render_text(const graphics::opengl::Buffer& vbo, std::string text, float x, float y, float scale, glm::vec3 color) -> void
+static auto render_text(const graphics::opengl::Buffer& vbo, std::string text) -> void
 {
+    auto x = 0.0f;
+
     for (std::string::const_iterator c = text.begin(); c != text.end(); ++c)
     {
         auto [texture, size, bearing, advance] = font_characters[*c];
 
-        const auto xpos = x + bearing.x * scale;
-        const auto ypos = y - bearing.y * scale;
+        constexpr auto y = 0.0f;
 
-        const auto w = size.x * scale;
-        const auto h = size.y * scale;
+        const auto xpos = x + bearing.x;
+        const auto ypos = y - bearing.y;
+
+        const auto w = size.x;
+        const auto h = size.y;
 
         const float vertices[6][4]
         {
@@ -53,7 +57,7 @@ static auto render_text(const graphics::opengl::Buffer& vbo, std::string text, f
 
         graphics::opengl::Commands::draw_vertices(GL_TRIANGLES, 0, 6);
 
-        x += (advance >> 6) * scale;
+        x += (advance >> 6);
     }
 }
 

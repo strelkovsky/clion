@@ -1,5 +1,4 @@
 ﻿#include <print>
-#include <map>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -184,6 +183,11 @@ auto main() -> int32_t
     transform_ubo.create();
     transform_ubo.bind(GL_UNIFORM_BUFFER, 1);
     transform_ubo.storage(sizeof(model_matrix), &model_matrix, GL_DYNAMIC_STORAGE_BIT);
+
+    graphics::opengl::Buffer material_ubo;
+    material_ubo.create();
+    material_ubo.bind(GL_UNIFORM_BUFFER, 2);
+    material_ubo.storage(sizeof(glm::vec3), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
     // идея семплера - вам не нужно указывать для каждой текстуры какой фильтр использовать.
     graphics::opengl::TextureSampler texture_sampler;
@@ -418,6 +422,11 @@ auto main() -> int32_t
 
     // atlas output end
 
+    glm::vec3 red_color { 1.0f, 0.0f, 0.0f };
+    glm::vec3 blue_color { 0.0f, 0.0f, 1.0f };
+
+    glm::mat4 text_matrix {1.0f};
+
     // у этого фреймбуффера будет handel = 0, что будет эквивалентно bind(0)
     graphics::opengl::framebuffer default_fb;
     default_fb.bind();
@@ -476,14 +485,18 @@ auto main() -> int32_t
 
         text_program_shader.bind();
 
-        glm::mat4 text_matrix { 1.0f };
-
-        transform_ubo.subdata(0, sizeof(text_matrix), &text_matrix);
-
         text_vao.bind();
 
-        render_text(text_vbo, "This is sample text", 305.0f, 105.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-        render_text(text_vbo, "(C) LearnOpenGL.com", 370.0f, 700.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
+        text_matrix = glm::translate(glm::mat4(1.0f), { 200.0f, 400.0f, 0.0f });
+        transform_ubo.subdata(0, sizeof(text_matrix), &text_matrix);
+        material_ubo.subdata(0, sizeof(glm::vec3), &red_color);
+        render_text(text_vbo, "This is sample text");
+
+        text_matrix = glm::translate(glm::mat4(1.0f), { 200.0f, 200.0f, 0.0f });
+        text_matrix = glm::scale(text_matrix, { 0.5f, 0.5f, 0.5f });
+        transform_ubo.subdata(0, sizeof(text_matrix), &text_matrix);
+        material_ubo.subdata(0, sizeof(glm::vec3), &blue_color);
+        render_text(text_vbo, "(C) LearnOpenGL.com");
 
         window_manager.update();
     }
