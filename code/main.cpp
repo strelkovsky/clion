@@ -54,48 +54,35 @@ namespace
 
     auto render_text(const graphics::opengl::Buffer& vbo, std::string text, float x, float y, float scale, glm::vec3 color) -> void
     {
-        // iterate through all characters
-        std::string::const_iterator c;
-        for (c = text.begin(); c != text.end(); c++)
+        for (std::string::const_iterator c = text.begin(); c != text.end(); ++c)
         {
-            font_character ch = font_characters[*c];
+            auto [texture, size, bearing, advance] = font_characters[*c];
 
-            float xpos = x + ch.bearing.x * scale;
-            float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+            const auto xpos = x + bearing.x * scale;
+            const auto ypos = y - bearing.y * scale;
 
-            float w = ch.size.x * scale;
-            float h = ch.size.y * scale;
+            const auto w = size.x * scale;
+            const auto h = size.y * scale;
 
-            // update VBO for each character
-            float vertices[6][4] = {
-                { xpos,     ypos + h,   0.0f, 0.0f },
-                { xpos,     ypos,       0.0f, 1.0f },
-                { xpos + w, ypos,       1.0f, 1.0f },
+            const float vertices[6][4]
+            {
+                { xpos,     ypos,      0.0f, 0.0f },
+                { xpos,     ypos + h,  0.0f, 1.0f },
+                { xpos + w, ypos + h,  1.0f, 1.0f },
 
-                { xpos,     ypos + h,   0.0f, 0.0f },
-                { xpos + w, ypos,       1.0f, 1.0f },
-                { xpos + w, ypos + h,   1.0f, 0.0f }
+                { xpos,     ypos,      0.0f, 0.0f },
+                { xpos + w, ypos + h,  1.0f, 1.0f },
+                { xpos + w, ypos,      1.0f, 0.0f }
             };
 
-            ch.texture.bind(0);
-
-            // render glyph texture over quad
-            //glBindTexture(GL_TEXTURE_2D, ch.TextureID);
-            // update content of VBO memory
-            //glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            texture.bind(0);
 
             vbo.subdata(0, sizeof(vertices), vertices);
-            //glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // be sure to use glBufferSubData and not glBufferData
 
-            //glBindBuffer(GL_ARRAY_BUFFER, 0);
-            // render quad
-            //glDrawArrays(GL_TRIANGLES, 0, 6);
             graphics::opengl::Commands::draw_vertices(GL_TRIANGLES, 0, 6);
-            // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-            x += (ch.advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+
+            x += (advance >> 6) * scale;
         }
-        glBindVertexArray(0);
-        glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
 
@@ -305,7 +292,7 @@ auto main() -> int32_t
         character.texture = texture;
         character.size = glm::ivec2(ft_face->glyph->bitmap.width,ft_face->glyph->bitmap.rows);
         character.bearing = glm::ivec2(ft_face->glyph->bitmap_left,ft_face->glyph->bitmap_top);
-        character.advance = static_cast<uint32_t>(ft_face->glyph->advance.x);
+        character.advance = static_cast<unsigned int>(ft_face->glyph->advance.x);
 
         font_characters.insert(std::make_pair(c, character));
     }
@@ -587,8 +574,8 @@ auto main() -> int32_t
 
         text_vao.bind();
 
-        render_text(text_vbo, "This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-        render_text(text_vbo, "(C) LearnOpenGL.com", 540.0f, 570.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
+        render_text(text_vbo, "This is sample text", 305.0f, 105.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+        render_text(text_vbo, "(C) LearnOpenGL.com", 370.0f, 700.0f, 0.5f, glm::vec3(0.3, 0.7f, 0.9f));
 
         window_manager.update();
     }
