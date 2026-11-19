@@ -21,4 +21,6 @@ add_subdirectory(cereal)
 
 add_subdirectory(behaviortree-cpp)
 
+add_subdirectory(freetype)
+
 add_subdirectory(SDL)
