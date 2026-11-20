@@ -11,6 +11,7 @@
 struct model_vertex
 {
     glm::vec3 position;
+    glm::vec3 normal;
     glm::vec2 texcoord;
 };
 
@@ -60,9 +61,10 @@ inline auto load_geometry(std::string_view filename) -> geometry<model_vertex, u
         for (auto i = 0; i < mesh->mNumVertices; i++)
         {
             const auto& position = mesh->mVertices[i];
+            const auto& normal = mesh->mNormals[i];
             const auto& texcoord = mesh->mTextureCoords[0][i];
 
-            geometry.vertices.emplace_back(model_vertex {glm::vec3{ position.x, position.y, position.z }, { texcoord.x, texcoord.y } });
+            geometry.vertices.emplace_back(model_vertex {{ position.x, position.y, position.z }, { normal.x, normal.y, normal.z }, { texcoord.x, texcoord.y } });
         }
 
         for (auto i = 0; i < mesh->mNumFaces; i++)

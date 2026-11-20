@@ -27,9 +27,9 @@
 #include "graphics/opengl/vertex_array.hpp"
 
 #include "geometry.hpp"
+#include "light.hpp"
 #include "resources.hpp"
 #include "text.hpp"
-
 
 auto main() -> int32_t
 {
@@ -126,15 +126,15 @@ auto main() -> int32_t
     text_vertex_stage.destroy();
     text_fragment_stage.destroy();
 
-    const auto [geometry_vertices, geometry_elements] = load_geometry("cube.obj");
+    const auto [cube_geometry_vertices, cube_geometry_elements] = load_geometry("models/cube.obj");
 
     graphics::opengl::Buffer cube_geometry_vbo;
     cube_geometry_vbo.create();
-    cube_geometry_vbo.storage(sizeof(model_vertex) * geometry_vertices.size(), geometry_vertices.data(), 0);
+    cube_geometry_vbo.storage(sizeof(model_vertex) * cube_geometry_vertices.size(), cube_geometry_vertices.data(), 0);
 
     graphics::opengl::Buffer cube_geometry_ebo;
     cube_geometry_ebo.create();
-    cube_geometry_ebo.storage(sizeof(uint32_t) * geometry_elements.size(), geometry_elements.data(), 0);
+    cube_geometry_ebo.storage(sizeof(uint32_t) * cube_geometry_elements.size(), cube_geometry_elements.data(), 0);
 
     graphics::opengl::VertexArray cube_geometry_vao;
     cube_geometry_vao.create();
@@ -143,7 +143,28 @@ auto main() -> int32_t
     cube_geometry_vao.attach_elements(cube_geometry_ebo);
 
     cube_geometry_vao.attach_attribute({0, offsetof(model_vertex, position), 3, GL_FLOAT, 0});
-    cube_geometry_vao.attach_attribute({1, offsetof(model_vertex, texcoord), 2, GL_FLOAT,  0});
+    cube_geometry_vao.attach_attribute({1, offsetof(model_vertex, normal), 3, GL_FLOAT,  0});
+    cube_geometry_vao.attach_attribute({2, offsetof(model_vertex, texcoord), 2, GL_FLOAT,  0});
+
+    const auto [sphere_geometry_vertices, sphere_geometry_elements] = load_geometry("models/sphere.obj");
+
+    graphics::opengl::Buffer sphere_geometry_vbo;
+    sphere_geometry_vbo.create();
+    sphere_geometry_vbo.storage(sizeof(model_vertex) * sphere_geometry_vertices.size(), sphere_geometry_vertices.data(), 0);
+
+    graphics::opengl::Buffer sphere_geometry_ebo;
+    sphere_geometry_ebo.create();
+    sphere_geometry_ebo.storage(sizeof(uint32_t) * sphere_geometry_elements.size(), sphere_geometry_elements.data(), 0);
+
+    graphics::opengl::VertexArray sphere_geometry_vao;
+    sphere_geometry_vao.create();
+
+    sphere_geometry_vao.attach_vertices(sphere_geometry_vbo, sizeof(model_vertex));
+    sphere_geometry_vao.attach_elements(sphere_geometry_ebo);
+
+    sphere_geometry_vao.attach_attribute({0, offsetof(model_vertex, position), 3, GL_FLOAT, 0});
+    sphere_geometry_vao.attach_attribute({1, offsetof(model_vertex, normal), 3, GL_FLOAT,  0});
+    sphere_geometry_vao.attach_attribute({2, offsetof(model_vertex, texcoord), 2, GL_FLOAT,  0});
 
     const auto [sprite_vertices, sprite_elements] = create_sprite({0, 0, 256.0f, 256.0f}, true);
 
@@ -188,6 +209,15 @@ auto main() -> int32_t
     material_ubo.create();
     material_ubo.bind(GL_UNIFORM_BUFFER, 2);
     material_ubo.storage(sizeof(glm::vec3), nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+    light default_light;
+    default_light.color = { 1.0f, 0.5f, 0.31f };
+    default_light.position = { 5.0f, 5.0f, 5.0f};
+
+    graphics::opengl::Buffer light_ubo;
+    light_ubo.create();
+    light_ubo.bind(GL_UNIFORM_BUFFER, 3);
+    light_ubo.storage(sizeof(light), &default_light, GL_DYNAMIC_STORAGE_BIT);
 
     // идея семплера - вам не нужно указывать для каждой текстуры какой фильтр использовать.
     graphics::opengl::TextureSampler texture_sampler;
@@ -427,6 +457,27 @@ auto main() -> int32_t
 
     glm::mat4 text_matrix {1.0f};
 
+    static auto show_cube = true;
+
+    glfwSetKeyCallback(std::any_cast<GLFWwindow*>(window->handle()), [](GLFWwindow*, int key, int, int action, int)
+    {
+        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+        {
+            show_cube = !show_cube;
+        }
+    });
+
+    auto default_texture_width = 1;
+    auto default_texture_height = 1;
+
+    uint8_t default_pixels[3] { 255, 255, 255 };
+
+    graphics::opengl::Texture default_texture;
+    default_texture.type = GL_TEXTURE_2D;
+    default_texture.create();
+    default_texture.storage(default_texture_width, default_texture_height, GL_RGB8, 1);
+    default_texture.subdata(default_texture_width, default_texture_height, GL_RGB, 0, default_pixels);
+
     // у этого фреймбуффера будет handel = 0, что будет эквивалентно bind(0)
     graphics::opengl::framebuffer default_fb;
     default_fb.bind();
@@ -454,13 +505,24 @@ auto main() -> int32_t
 
         model_program_shader.bind();
 
-        brick_texture.bind(0);
-
-        cube_geometry_vao.bind();
-
         transform_ubo.subdata(0, sizeof(model_matrix), &model_matrix);
 
-        graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, geometry_elements.size());
+        if (show_cube)
+        {
+            brick_texture.bind(0);
+
+            cube_geometry_vao.bind();
+
+            graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, cube_geometry_elements.size());
+        }
+        else
+        {
+            default_texture.bind(0);
+
+            sphere_geometry_vao.bind();
+
+            graphics::opengl::Commands::draw_elements(GL_TRIANGLES, 0, sphere_geometry_elements.size());
+        }
 
         // 2D drawing
 
@@ -487,16 +549,16 @@ auto main() -> int32_t
 
         text_vao.bind();
 
-        text_matrix = glm::translate(glm::mat4(1.0f), { 200.0f, 400.0f, 0.0f });
+        text_matrix = glm::translate(glm::mat4(1.0f), { 200.0f, 100.0f, 0.0f });
         transform_ubo.subdata(0, sizeof(text_matrix), &text_matrix);
         material_ubo.subdata(0, sizeof(glm::vec3), &red_color);
         render_text(text_vbo, "This is sample text");
 
-        text_matrix = glm::translate(glm::mat4(1.0f), { 200.0f, 200.0f, 0.0f });
+        text_matrix = glm::translate(glm::mat4(1.0f), { 200.0f, 750.0f, 0.0f });
         text_matrix = glm::scale(text_matrix, { 0.5f, 0.5f, 0.5f });
         transform_ubo.subdata(0, sizeof(text_matrix), &text_matrix);
         material_ubo.subdata(0, sizeof(glm::vec3), &blue_color);
-        render_text(text_vbo, "(C) LearnOpenGL.com");
+        render_text(text_vbo, "This is a second sample text");
 
         window_manager.update();
     }
